@@ -13,13 +13,21 @@ char done = 0;
 char p1Turn = 1;
 
 void printBoard(){
-    printf("\033[2J");
+    printf("\033[2J\033[2J");
     printf("\033[H");
     printf("+-1---2---3---4---5---6---7-+\n");
     for(int i = 0; i < ROWS; i++){
         printf("|");
         for(int j = 0; j < COLS; j++){
-            printf(" %c |",board[i][j]);
+
+            if(board[i][j] == p1){
+                printf(" \033[31m%c\033[0m |",board[i][j]);
+            }else if(board[i][j] == p2){
+                printf(" \033[33m%c\033[0m |",board[i][j]);
+            }else{
+                printf("   |");
+            }
+
             if(j == COLS - 1){
                 printf("\n+---+---+---+---+---+---+---+\n");
             }
@@ -28,25 +36,42 @@ void printBoard(){
 }
 
 int getNextCol(const char* printPhrase){
-    printf(printPhrase);
+    printf("%s",printPhrase);
     int col = fgetc(stdin);
     while(col < 49 || col > 55){
 
         //Clear the line, so next input is the new line and not the old one
         while(fgetc(stdin) != 10){}//10 is '\n'
 
-        printf(printPhrase);
+        printf("%s",printPhrase);
         col = fgetc(stdin);
     }
     //Clear the line, so next input is the new line and not the old one
     while(fgetc(stdin) != 10){}//10 is '\n'
-
     return col-49; //turn the char number to indexes 0-6
 }
 
-int playerWon(char playerChar){
-    printf("%c\n",playerChar);
-    return 0;
+int currentBoardState(char playerChar){
+
+    //TODO: Write algo to check if playerChar won
+
+    int filledColumns = 0;
+    for(int i = 0; i < COLS; i++){
+        filledColumns += nextAvailRow[i] == -1 ? 1 : 0;
+    }
+    if(filledColumns == COLS){
+        return 0; //Draw
+    }
+
+    return -1;
+}
+
+int getAIDecision(){
+    int ai_col = rand() % 7;
+    while(nextAvailRow[ai_col] == -1){
+        ai_col = rand() % 7;
+    }
+    return ai_col;
 }
 
 int main(int argc, char* args[]){
@@ -68,29 +93,34 @@ int main(int argc, char* args[]){
         nextAvailRow[i] = ROWS-1;
     }
     printBoard();
-    int count = 0; //NOTE: This is just for testing
-    while(count < 7){
-        char* printPhrase = p1Turn ? "Player 1, Select a column: " : "Player 2, Select a column: ";
-        int col = getNextCol(printPhrase);
-        while(nextAvailRow[col] == -1){
-            printf("That column is full!, pick a new column.\n");
-            col = getNextCol(printPhrase);
-        }
-        int row = nextAvailRow[col]--;
-        board[row][col] = p1Turn ? p1 : p2;
-        
-        printBoard();
 
-        //TODO: Do a win condition check on current player, if win, exit while loop
+    while(!done){
         char currentPlayer = p1Turn ? p1 : p2;
-        if(playerWon(currentPlayer)){
+        char* printPhrase = p1Turn ? "Player 1, Select a column: " : "Player 2, Select a column: ";
+        int col;
 
+        if(!p1Turn && !twoPlayer){
+            col = getAIDecision();
+        }else{
+            col = getNextCol(printPhrase);
+            while(nextAvailRow[col] == -1){
+                printf("That column is full!, pick a new column.\n");
+                col = getNextCol(printPhrase);
+            }
         }
-        p1Turn = twoPlayer ? !p1Turn : p1Turn;
-
-        //TODO: If not 2 player game, this will be AI turn, otherwise have other player pick
-        // done = 1;
-        count++;
+        
+        int row = nextAvailRow[col]--;
+        board[row][col] = currentPlayer;
+        printBoard();
+        
+        int currentState = currentBoardState(currentPlayer);
+        if(currentState == 1){ //current Player Won
+            done = 1;
+        }else if(currentState == 0){ //Draw
+            done = 1;
+            printf("The game ended in a draw.\n");
+        }
+        p1Turn = !p1Turn;
     }
     return 0;
 }
