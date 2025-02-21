@@ -13,6 +13,8 @@ char done = 0;
 char p1Turn = 1;
 
 void printBoard(){
+    printf("\033[2J");
+    printf("\033[H");
     printf("+-1---2---3---4---5---6---7-+\n");
     for(int i = 0; i < ROWS; i++){
         printf("|");
@@ -23,6 +25,23 @@ void printBoard(){
             }
         }
     }
+}
+
+int getNextCol(const char* printPhrase){
+    printf(printPhrase);
+    int col = fgetc(stdin);
+    while(col < 49 || col > 55){
+
+        //Clear the line, so next input is the new line and not the old one
+        while(fgetc(stdin) != 10){}//10 is '\n'
+
+        printf(printPhrase);
+        col = fgetc(stdin);
+    }
+    //Clear the line, so next input is the new line and not the old one
+    while(fgetc(stdin) != 10){}//10 is '\n'
+
+    return col-49; //turn the char number to indexes 0-6
 }
 
 int main(int argc, char* args[]){
@@ -41,30 +60,28 @@ int main(int argc, char* args[]){
         }
     }
     for(int i = 0; i < COLS; i++){
-        nextAvailRow[i] = ROWS - 1;
+        nextAvailRow[i] = ROWS-1;
     }
     printBoard();
-
-    while(!done){
-        printf("Select a column (1-7): ");
-        int col = fgetc(stdin);
-        while(col < 49 || col > 55){
-
-            //To iterate through the entire line so we can get the next input
-            int nextChar = fgetc(stdin);
-            while(nextChar != 10){ //10 is '\n'
-                nextChar = fgetc(stdin);
-            }
-
-            printf("Please select a column (1-7): ");
-            col = fgetc(stdin);
+    int count = 0; //NOTE: This is just for testing
+    while(count < 7){
+        char* printPhrase = p1Turn ? "Player 1, Select a column: " : "Player 2, Select a column: ";
+        int col = getNextCol(printPhrase);
+        while(nextAvailRow[col] == -1){
+            printf("That column is full!, pick a new column.\n");
+            col = getNextCol(printPhrase);
         }
-        col-=48; //turn the char number to numbers 1-7
+        int row = nextAvailRow[col]--;
+        board[row][col] = p1Turn ? p1 : p2;
         
-        done = 1;
+        printBoard();
+
+        //TODO: Do a win condition check on current player, if win, exit while loop
+        p1Turn = twoPlayer ? !p1Turn : p1Turn;
+
+        //TODO: If not 2 player game, this will be AI turn, otherwise have other player pick
+        // done = 1;
+        count++;
     }
-    // How to clear screen
-    // printf("\033[2J");
-    // printf("\033[H");
     return 0;
 }
