@@ -41,7 +41,7 @@ int getNextCol(const char* printPhrase){
     while(col < 49 || col > 55){
 
         //Clear the line, so next input is the new line and not the old one
-        while(fgetc(stdin) != 10){}//10 is '\n'
+        while(col != 10 && fgetc(stdin) != 10){}//10 is '\n'
 
         printf("%s",printPhrase);
         col = fgetc(stdin);
@@ -53,8 +53,44 @@ int getNextCol(const char* printPhrase){
 
 int currentBoardState(char playerChar){
 
-    //TODO: Write algo to check if playerChar won
+    for(int i = 0; i < ROWS; i++){
+        for(int j = 0; j < COLS; j++){
+            if(board[i][j] != playerChar) continue;
 
+            int rightWin = 1;
+            int bottomWin = 1;
+            int lowerRightDiagWin = 1;
+            int lowerLeftDiagWin = 1;
+            for(int a = 1; a < 4; a++){
+                if(j+a <= COLS-1){
+                    if(board[i][j+a] == playerChar && ++rightWin == 4) {
+                        // printf("RIGHT WIN\n");
+                        return 1;
+                    }
+                }
+                if(i+a <= ROWS-1){
+                    if(board[i+a][j] == playerChar && ++bottomWin == 4){
+                        // printf("BOTTOM WIN\n");
+                        return 1;
+                    }
+                }
+                if(j+a <= COLS-1 && i+a <= ROWS-1){
+                    if(board[i+a][j+a] == playerChar && ++lowerRightDiagWin == 4){
+                        // printf("RIGHT-DIAG WIN\n");
+                        return 1;
+                    }
+                }
+                if(j-a >= 0 && i+a <= ROWS-1){
+                    if(board[i+a][j-a] == playerChar && ++lowerLeftDiagWin == 4){
+                        // printf("LEFT-DIAG WIN\n");
+                        return 1;
+                    }
+                }
+            }
+        }
+    }
+
+    //Check if all the columns are filled, means a draw
     int filledColumns = 0;
     for(int i = 0; i < COLS; i++){
         filledColumns += nextAvailRow[i] == -1 ? 1 : 0;
@@ -115,6 +151,7 @@ int main(int argc, char* args[]){
         
         int currentState = currentBoardState(currentPlayer);
         if(currentState == 1){ //current Player Won
+            printf("Player %c Wins!\n",currentPlayer);
             done = 1;
         }else if(currentState == 0){ //Draw
             done = 1;
