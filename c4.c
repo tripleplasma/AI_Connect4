@@ -44,6 +44,11 @@ int getNextCol(const char* printPhrase){
     return col-49; //turn the char number to indexes 0-6
 }
 
+int playerWon(char playerChar){
+    printf("%c\n",playerChar);
+    return 0;
+}
+
 int main(int argc, char* args[]){
     char twoPlayer = 0;
     for(int i = 1; i < argc; i++){
@@ -77,6 +82,10 @@ int main(int argc, char* args[]){
         printBoard();
 
         //TODO: Do a win condition check on current player, if win, exit while loop
+        char currentPlayer = p1Turn ? p1 : p2;
+        if(playerWon(currentPlayer)){
+
+        }
         p1Turn = twoPlayer ? !p1Turn : p1Turn;
 
         //TODO: If not 2 player game, this will be AI turn, otherwise have other player pick
